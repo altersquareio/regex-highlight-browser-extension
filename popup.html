@@ -5,57 +5,71 @@
     <title>Regex Highlighter</title>
     <style>
         body {
-            width: 300px;
-            /* Slightly wider */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
             background-color: #f4f4f4;
             color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 400px; /* Adjust width as needed */
         }
 
         h1 {
             color: #007bff;
-            /* Blue heading */
-            margin-bottom: 15px;
+            text-align: center;
+            margin-bottom: 20px;
         }
 
         input[type="text"] {
             width: calc(100% - 12px);
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #ced4da;
             border-radius: 4px;
             margin-bottom: 15px;
             box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
         }
 
-        div {
-            /* Flags container */
-            margin-bottom: 15px;
+        input[type="text"]:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .flags-container {
+            margin-bottom: 20px;
             display: flex;
-            /* Arrange flags horizontally */
             flex-wrap: wrap;
-            /* Allow wrapping on smaller screens */
-            gap: 10px;
-            /* Space between flags */
+            gap: 15px;
         }
 
         label {
             display: flex;
             align-items: center;
-            /* Vertically align checkbox and label */
-            margin-right: 15px;
-            /* Space between flag groups */
+            cursor: pointer;
+            font-size: 16px;
         }
 
         input[type="checkbox"] {
-            margin-right: 5px;
+            margin-right: 8px;
             appearance: none;
-            width: 20px;
-            height: 12px;
+            width: 24px;
+            height: 14px;
             background-color: #ced4da;
-            border-radius: 6px;
+            border-radius: 7px;
             position: relative;
             cursor: pointer;
+            transition: background-color 0.2s ease;
         }
 
         input[type="checkbox"]:checked {
@@ -67,26 +81,26 @@
             position: absolute;
             top: 2px;
             left: 2px;
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             background-color: white;
             border-radius: 50%;
             transition: transform 0.2s ease;
         }
 
         input[type="checkbox"]:checked::before {
-            transform: translateX(8px);
+            transform: translateX(10px);
         }
 
         button {
             background-color: #007bff;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: 12px 25px;
+            border-radius: 5px;
             cursor: pointer;
-            margin-right: 10px;
-            /* Space between buttons */
+            margin-right: 10px; /* Space between buttons */
+            font-size: 16px;
             transition: background-color 0.2s ease;
         }
 
@@ -95,31 +109,49 @@
         }
 
         #clear {
-            /* Style for the clear button */
             background-color: #dc3545;
-            /* Red */
         }
 
         #clear:hover {
             background-color: #c12a36;
         }
+
+        /* Style for prev/next buttons group */
+        .navigation-buttons {
+            display: flex;
+            gap: 10px; /* Space between prev/next buttons */
+        }
+
+        .highlighted {
+            background-color: #fff8dc;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
     </style>
 </head>
 
 <body>
-    <h1>Regex Highlighter</h1>
-    <input type="text" id="regex" placeholder="Enter regex">
+    <div class="container">
+        <h1>Regex Highlighter</h1>
+        <input type="text" id="regex" placeholder="Enter regex">
 
-    <div>
-        Flags:
-        <label><input type="checkbox" id="global" checked> Global (g)</label>
-        <label><input type="checkbox" id="caseInsensitive" checked> Case Insensitive (i)</label>
-        <label><input type="checkbox" id="multiline"> Multiline (m)</label>
-        <label><input type="checkbox" id="unicode" checked> Unicode (u)</label>
+        <div class="flags-container">
+            Flags:
+            <label><input type="checkbox" id="global" checked> Global (g)</label>
+            <label><input type="checkbox" id="caseInsensitive" checked> Case Insensitive (i)</label>
+            <label><input type="checkbox" id="multiline"> Multiline (m)</label>
+            <label><input type="checkbox" id="unicode" checked> Unicode (u)</label>
+        </div>
+
+        <button id="highlight">Highlight</button>
+        <button id="clear">Clear Highlights</button>
+
+        <div class="navigation-buttons">
+            <button id="prevMatch">Previous Match</button>
+            <button id="nextMatch">Next Match</button>
+        </div>
     </div>
-
-    <button id="highlight">Highlight</button>
-    <button id="clear">Clear Highlights</button>
     <script src="popup.js"></script>
 </body>
 

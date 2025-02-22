@@ -1,3 +1,5 @@
+var scrollIndex = -1;
+
 document.addEventListener("DOMContentLoaded", handleDOMLoad);
 
 async function handleDOMLoad() {
@@ -8,6 +10,10 @@ async function handleDOMLoad() {
 	document
 		.getElementById("clear")
 		.addEventListener("click", clearEventHandler);
+
+	document.getElementById("prevMatch").addEventListener("click", scrollPrev);
+
+	document.getElementById("nextMatch").addEventListener("click", scrollNext);
 
 	let { regex } = await getFromStorage("regex");
 	let { flags } = await getFromStorage("flags");
@@ -21,6 +27,74 @@ async function handleDOMLoad() {
 		document.getElementById("multiline").checked = flags.includes("m");
 		document.getElementById("unicode").checked = flags.includes("u");
 	}
+}
+
+function scrollNext() {
+	console.log("here");
+	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+		if (tabs && tabs.length > 0) {
+			chrome.scripting.executeScript({
+				target: { tabId: tabs[0].id },
+				function: (idx) => {
+					let highlightedSpans = document.querySelectorAll(
+						'span[style*="background-color: yellow"]'
+					);
+					idx++;
+					if (idx < 0 || idx > highlightedSpans.length - 1) return;
+					console.log(idx);
+
+					let rect = highlightedSpans[idx].getBoundingClientRect();
+					let top =
+						rect.top +
+						window.scrollY -
+						window.innerHeight / 2 +
+						rect.height / 2; // Adjust for current scroll position
+					let left =
+						rect.left +
+						window.scrollX -
+						window.innerWidth / 2 +
+						rect.width / 2; // Adjust for current scroll position
+
+					window.scrollTo({
+						top: top,
+						left: left,
+						behavior: "smooth",
+					});
+				},
+				args: [scrollIndex],
+			});
+		} else {
+			console.error("No active tab found.");
+		}
+	});
+}
+
+function scrollPrev() {
+	// let highlightedSpans = document.querySelectorAll(
+	// 	'span[style*="background-color: yellow"]'
+	// );
+	// scrollIndex--;
+	// if (scrollIndex < 0 || scrollIndex > highlightedSpans.length - 1) return;
+	// let rect = highlightedSpans[scrollIndex].getBoundingClientRect();
+	// let top = rect.top + window.scrollY; // Adjust for current scroll position
+	// let left = rect.left + window.scrollX; // Adjust for current scroll position
+	// chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+	// 	console.log("here");
+	// 	if (tabs && tabs.length > 0) {
+	// 		chrome.scripting.executeScript({
+	// 			target: { tabId: tabs[0].id },
+	// 			function: () => {
+	// 				window.scrollTo({
+	// 					top: top,
+	// 					left: left,
+	// 					behavior: "smooth",
+	// 				});
+	// 			},
+	// 		});
+	// 	} else {
+	// 		console.error("No active tab found.");
+	// 	}
+	// });
 }
 
 async function handleHighlightClick() {
@@ -48,19 +122,7 @@ async function handleHighlightClick() {
 				function: highlightText,
 				args: [regexStr, flags],
 			});
-		} else {
-			console.error("No active tab found.");
-		}
-	});
-}
-
-function clearEventHandler() {
-	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-		if (tabs && tabs.length > 0) {
-			chrome.scripting.executeScript({
-				target: { tabId: tabs[0].id },
-				function: clearHighlights,
-			});
+			scrollNext();
 		} else {
 			console.error("No active tab found.");
 		}
@@ -141,7 +203,21 @@ function highlightText(regexStr, flags) {
 	}
 }
 
+function clearEventHandler() {
+	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+		if (tabs && tabs.length > 0) {
+			chrome.scripting.executeScript({
+				target: { tabId: tabs[0].id },
+				function: clearHighlights,
+			});
+		} else {
+			console.error("No active tab found.");
+		}
+	});
+}
+
 function clearHighlights() {
+	scrollIndex = -1;
 	const highlightedSpans = document.querySelectorAll(
 		'span[style*="background-color: yellow"]'
 	);
