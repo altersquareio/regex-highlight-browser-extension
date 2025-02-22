@@ -8,7 +8,7 @@
 			"type": "chrome",
 			"request": "launch",
 			"name": "Launch Chrome against localhost",
-			"url": "https://indianexpress.com/",
+			"url": "https://www.thenewsminute.com/",
 			"runtimeArgs": [
 				"--load-extension=${workspaceFolder}"
 			],
