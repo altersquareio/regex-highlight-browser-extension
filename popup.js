@@ -1,5 +1,3 @@
-var scrollIndex = -1;
-
 document.addEventListener("DOMContentLoaded", handleDOMLoad);
 
 async function handleDOMLoad() {
@@ -30,71 +28,98 @@ async function handleDOMLoad() {
 }
 
 function scrollNext() {
-	console.log("here");
-	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-		if (tabs && tabs.length > 0) {
-			chrome.scripting.executeScript({
-				target: { tabId: tabs[0].id },
-				function: (idx) => {
-					let highlightedSpans = document.querySelectorAll(
-						'span[style*="background-color: yellow"]'
-					);
-					idx++;
-					if (idx < 0 || idx > highlightedSpans.length - 1) return;
-					console.log(idx);
-
-					let rect = highlightedSpans[idx].getBoundingClientRect();
-					let top =
-						rect.top +
-						window.scrollY -
-						window.innerHeight / 2 +
-						rect.height / 2; // Adjust for current scroll position
-					let left =
-						rect.left +
-						window.scrollX -
-						window.innerWidth / 2 +
-						rect.width / 2; // Adjust for current scroll position
-
-					window.scrollTo({
-						top: top,
-						left: left,
-						behavior: "smooth",
-					});
-				},
-				args: [scrollIndex],
-			});
-		} else {
+	chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+		if (!tabs || tabs.length == 0) {
 			console.error("No active tab found.");
 		}
+		let { idx } = await getFromStorage("idx");
+		if (idx == undefined) {
+			await setStorage("idx", -1);
+			idx = -1;
+		}
+		let data = await chrome.scripting.executeScript({
+			target: { tabId: tabs[0].id },
+			function: async (index) => {
+				let highlightedSpans = document.querySelectorAll(
+					'span[style*="background-color: yellow"]'
+				);
+
+
+				if (index + 1 < 0 || index + 1 > highlightedSpans.length - 1)
+					return false;
+				index++;
+
+				let rect = highlightedSpans[index].getBoundingClientRect();
+				let top =
+					rect.top +
+					window.scrollY -
+					window.innerHeight / 2 +
+					rect.height / 2; // Adjust for current scroll position
+				let left =
+					rect.left +
+					window.scrollX -
+					window.innerWidth / 2 +
+					rect.width / 2; // Adjust for current scroll position
+
+				window.scrollTo({
+					top: top,
+					left: left,
+					behavior: "smooth",
+				});
+				return true;
+			},
+			args: [idx],
+		});
+		if (data[0].result) idx++;
+		await setStorage("idx", idx);
 	});
 }
 
 function scrollPrev() {
-	// let highlightedSpans = document.querySelectorAll(
-	// 	'span[style*="background-color: yellow"]'
-	// );
-	// scrollIndex--;
-	// if (scrollIndex < 0 || scrollIndex > highlightedSpans.length - 1) return;
-	// let rect = highlightedSpans[scrollIndex].getBoundingClientRect();
-	// let top = rect.top + window.scrollY; // Adjust for current scroll position
-	// let left = rect.left + window.scrollX; // Adjust for current scroll position
-	// chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-	// 	console.log("here");
-	// 	if (tabs && tabs.length > 0) {
-	// 		chrome.scripting.executeScript({
-	// 			target: { tabId: tabs[0].id },
-	// 			function: () => {
-	// 				window.scrollTo({
-	// 					top: top,
-	// 					left: left,
-	// 					behavior: "smooth",
-	// 				});
-	// 			},
-	// 		});
-	// 	} else {
-	// 		console.error("No active tab found.");
-	// 	}
-	// });
+	chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+		if (!tabs || tabs.length == 0) {
+			console.error("No active tab found.");
+		}
+		let { idx } = await getFromStorage("idx");
+		if (idx == undefined) {
+			await setStorage("idx", -1);
+			idx = -1;
+		}
+		let data = await chrome.scripting.executeScript({
+			target: { tabId: tabs[0].id },
+			function: async (index) => {
+				let highlightedSpans = document.querySelectorAll(
+					'span[style*="background-color: yellow"]'
+				);
+
+				if (index - 1 < 0 || index - 1 > highlightedSpans.length - 1)
+					return false;
+				index--;
+
+				let rect = highlightedSpans[index].getBoundingClientRect();
+				let top =
+					rect.top +
+					window.scrollY -
+					window.innerHeight / 2 +
+					rect.height / 2; // Adjust for current scroll position
+				let left =
+					rect.left +
+					window.scrollX -
+					window.innerWidth / 2 +
+					rect.width / 2; // Adjust for current scroll position
+
+				window.scrollTo({
+					top: top,
+					left: left,
+					behavior: "smooth",
+				});
+				return true;
+			},
+			args: [idx],
+		});
+		if (data[0].result) idx--;
+		await setStorage("idx", idx);
+	});
 }
 
 async function handleHighlightClick() {
@@ -204,12 +229,13 @@ function highlightText(regexStr, flags) {
 }
 
 function clearEventHandler() {
-	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+	chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
 		if (tabs && tabs.length > 0) {
 			chrome.scripting.executeScript({
 				target: { tabId: tabs[0].id },
 				function: clearHighlights,
 			});
+			await removeFromStorage("idx");
 		} else {
 			console.error("No active tab found.");
 		}
@@ -217,7 +243,6 @@ function clearEventHandler() {
 }
 
 function clearHighlights() {
-	scrollIndex = -1;
 	const highlightedSpans = document.querySelectorAll(
 		'span[style*="background-color: yellow"]'
 	);
@@ -263,18 +288,18 @@ async function getFromStorage(key) {
  * @param {string} key The key to remove.
  * @returns {Promise<void>} A promise that resolves when the data is removed.
  */
-// async function removeFromStorage(key) {
-// 	let storageKey = validateAndMutateKey(key); // Validate the key.
-// 	return new Promise((resolve, reject) => {
-// 		chrome.storage.local.remove(storageKey, () => {
-// 			if (chrome.runtime.lastError) {
-// 				reject(chrome.runtime.lastError); // Reject with any Chrome runtime errors.
-// 			} else {
-// 				resolve(); // Resolve when data is removed.
-// 			}
-// 		});
-// 	});
-// }
+async function removeFromStorage(key) {
+	let storageKey = validateAndMutateKey(key); // Validate the key.
+	return new Promise((resolve, reject) => {
+		chrome.storage.local.remove(storageKey, () => {
+			if (chrome.runtime.lastError) {
+				reject(chrome.runtime.lastError); // Reject with any Chrome runtime errors.
+			} else {
+				resolve(); // Resolve when data is removed.
+			}
+		});
+	});
+}
 
 /**
  * Sets data in Chrome local storage.
