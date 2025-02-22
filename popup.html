@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Regex Highlighter</title>
+    <style>
+        body {
+            width: 300px;
+            /* Slightly wider */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        h1 {
+            color: #007bff;
+            /* Blue heading */
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 12px);
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        div {
+            /* Flags container */
+            margin-bottom: 15px;
+            display: flex;
+            /* Arrange flags horizontally */
+            flex-wrap: wrap;
+            /* Allow wrapping on smaller screens */
+            gap: 10px;
+            /* Space between flags */
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            /* Vertically align checkbox and label */
+            margin-right: 15px;
+            /* Space between flag groups */
+        }
+
+        input[type="checkbox"] {
+            margin-right: 5px;
+            appearance: none;
+            width: 20px;
+            height: 12px;
+            background-color: #ced4da;
+            border-radius: 6px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"]:checked {
+            background-color: #007bff;
+        }
+
+        input[type="checkbox"]::before {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+        }
+
+        input[type="checkbox"]:checked::before {
+            transform: translateX(8px);
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            /* Space between buttons */
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #clear {
+            /* Style for the clear button */
+            background-color: #dc3545;
+            /* Red */
+        }
+
+        #clear:hover {
+            background-color: #c12a36;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Regex Highlighter</h1>
+    <input type="text" id="regex" placeholder="Enter regex">
+
+    <div>
+        Flags:
+        <label><input type="checkbox" id="global" checked> Global (g)</label>
+        <label><input type="checkbox" id="caseInsensitive" checked> Case Insensitive (i)</label>
+        <label><input type="checkbox" id="multiline"> Multiline (m)</label>
+        <label><input type="checkbox" id="unicode" checked> Unicode (u)</label>
+    </div>
+
+    <button id="highlight">Highlight</button>
+    <button id="clear">Clear Highlights</button>
+    <script src="popup.js"></script>
+</body>
+
+</html>

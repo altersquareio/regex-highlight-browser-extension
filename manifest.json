@@ -1,0 +1,14 @@
+{
+	"manifest_version": 3,
+	"name": "Regex Highlighter",
+	"version": "1.0",
+	"description": "Highlights text on a page using regular expressions.",
+	"permissions": [
+		"activeTab",
+		"storage",
+		"scripting"
+	],
+	"action": {
+		"default_popup": "popup.html"
+	}
+}
