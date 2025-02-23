@@ -25,10 +25,22 @@ async function handleDOMLoad() {
 	let { regex } = await getFromStorage("regex");
 	let { flags } = await getFromStorage("flags");
 
-	if (regex) {
+	if (regex === undefined) {
+		let val = "test.*";
+		await setStorage("regex", val);
+		regex = val;
+	}
+
+	if (flags === undefined) {
+		let val = "gm";
+		await setStorage("flags", val);
+		flags = val;
+	}
+
+	if (regex !== undefined) {
 		document.getElementById("regex").value = regex;
 	}
-	if (flags) {
+	if (flags !== undefined) {
 		document.getElementById("global").checked = flags.includes("g");
 		document.getElementById("caseInsensitive").checked =
 			flags.includes("i");
