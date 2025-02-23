@@ -27,101 +27,6 @@ async function handleDOMLoad() {
 	}
 }
 
-function scrollNext() {
-	chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-		if (!tabs || tabs.length == 0) {
-			console.error("No active tab found.");
-		}
-		let { idx } = await getFromStorage("idx");
-		if (idx == undefined) {
-			await setStorage("idx", -1);
-			idx = -1;
-		}
-		let data = await chrome.scripting.executeScript({
-			target: { tabId: tabs[0].id },
-			function: async (index) => {
-				let highlightedSpans = document.querySelectorAll(
-					'span[style*="background-color: yellow"]'
-				);
-
-
-				if (index + 1 < 0 || index + 1 > highlightedSpans.length - 1)
-					return false;
-				index++;
-
-				let rect = highlightedSpans[index].getBoundingClientRect();
-				let top =
-					rect.top +
-					window.scrollY -
-					window.innerHeight / 2 +
-					rect.height / 2; // Adjust for current scroll position
-				let left =
-					rect.left +
-					window.scrollX -
-					window.innerWidth / 2 +
-					rect.width / 2; // Adjust for current scroll position
-
-				window.scrollTo({
-					top: top,
-					left: left,
-					behavior: "smooth",
-				});
-				return true;
-			},
-			args: [idx],
-		});
-		if (data[0].result) idx++;
-		await setStorage("idx", idx);
-	});
-}
-
-function scrollPrev() {
-	chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-		if (!tabs || tabs.length == 0) {
-			console.error("No active tab found.");
-		}
-		let { idx } = await getFromStorage("idx");
-		if (idx == undefined) {
-			await setStorage("idx", -1);
-			idx = -1;
-		}
-		let data = await chrome.scripting.executeScript({
-			target: { tabId: tabs[0].id },
-			function: async (index) => {
-				let highlightedSpans = document.querySelectorAll(
-					'span[style*="background-color: yellow"]'
-				);
-
-				if (index - 1 < 0 || index - 1 > highlightedSpans.length - 1)
-					return false;
-				index--;
-
-				let rect = highlightedSpans[index].getBoundingClientRect();
-				let top =
-					rect.top +
-					window.scrollY -
-					window.innerHeight / 2 +
-					rect.height / 2; // Adjust for current scroll position
-				let left =
-					rect.left +
-					window.scrollX -
-					window.innerWidth / 2 +
-					rect.width / 2; // Adjust for current scroll position
-
-				window.scrollTo({
-					top: top,
-					left: left,
-					behavior: "smooth",
-				});
-				return true;
-			},
-			args: [idx],
-		});
-		if (data[0].result) idx--;
-		await setStorage("idx", idx);
-	});
-}
-
 async function handleHighlightClick() {
 	clearEventHandler();
 	const regexStr = document.getElementById("regex").value;
@@ -252,6 +157,100 @@ function clearHighlights() {
 		const textNode = document.createTextNode(span.textContent);
 		span.parentNode.replaceChild(textNode, span);
 	}
+}
+
+function scrollNext() {
+	chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+		if (!tabs || tabs.length == 0) {
+			console.error("No active tab found.");
+		}
+		let { idx } = await getFromStorage("idx");
+		if (idx == undefined) {
+			await setStorage("idx", -1);
+			idx = -1;
+		}
+		let data = await chrome.scripting.executeScript({
+			target: { tabId: tabs[0].id },
+			function: async (index) => {
+				let highlightedSpans = document.querySelectorAll(
+					'span[style*="background-color: yellow"]'
+				);
+
+				if (index + 1 < 0 || index + 1 > highlightedSpans.length - 1)
+					return false;
+				index++;
+
+				let rect = highlightedSpans[index].getBoundingClientRect();
+				let top =
+					rect.top +
+					window.scrollY -
+					window.innerHeight / 2 +
+					rect.height / 2; // Adjust for current scroll position
+				let left =
+					rect.left +
+					window.scrollX -
+					window.innerWidth / 2 +
+					rect.width / 2; // Adjust for current scroll position
+
+				window.scrollTo({
+					top: top,
+					left: left,
+					behavior: "smooth",
+				});
+				return true;
+			},
+			args: [idx],
+		});
+		if (data[0].result) idx++;
+		await setStorage("idx", idx);
+	});
+}
+
+function scrollPrev() {
+	chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+		if (!tabs || tabs.length == 0) {
+			console.error("No active tab found.");
+		}
+		let { idx } = await getFromStorage("idx");
+		if (idx == undefined) {
+			await setStorage("idx", -1);
+			idx = -1;
+		}
+		let data = await chrome.scripting.executeScript({
+			target: { tabId: tabs[0].id },
+			function: async (index) => {
+				let highlightedSpans = document.querySelectorAll(
+					'span[style*="background-color: yellow"]'
+				);
+
+				if (index - 1 < 0 || index - 1 > highlightedSpans.length - 1)
+					return false;
+				index--;
+
+				let rect = highlightedSpans[index].getBoundingClientRect();
+				let top =
+					rect.top +
+					window.scrollY -
+					window.innerHeight / 2 +
+					rect.height / 2; // Adjust for current scroll position
+				let left =
+					rect.left +
+					window.scrollX -
+					window.innerWidth / 2 +
+					rect.width / 2; // Adjust for current scroll position
+
+				window.scrollTo({
+					top: top,
+					left: left,
+					behavior: "smooth",
+				});
+				return true;
+			},
+			args: [idx],
+		});
+		if (data[0].result) idx--;
+		await setStorage("idx", idx);
+	});
 }
 
 /**
