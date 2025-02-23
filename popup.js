@@ -82,6 +82,8 @@ async function handleHighlightClick() {
  * @param {string} flags The regex flags (e.g., "i" for case-insensitive, "g" for global).
  */
 function highlightText(regexStr, flags) {
+	const MAX_ARRAY_LENGTH = 100; // maximum number of matches allowed with the regex
+
 	// If no regex string is provided, exit the function.
 	if (!regexStr) return;
 
@@ -139,10 +141,14 @@ function highlightText(regexStr, flags) {
 			let match;
 			// Find all matches within the current text node.
 			while ((match = regex.exec(node.nodeValue))) {
-				matches.push({
-					index: match.index,
-					length: match[0].length,
-				});
+				if (matches.length < MAX_ARRAY_LENGTH) { // if matches exceed limit then dont match and stop
+					matches.push({
+						index: match.index,
+						length: match[0].length,
+					});
+				} else {
+					break;
+				}
 			}
 
 			// If matches are found, split the text node and wrap the matches in <span> elements.
