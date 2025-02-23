@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
 	"name": "Regex Highlighter",
-	"version": "2.0",
+	"version": "4.0",
 	"description": "Highlights text on a page using regular expressions.",
 	"permissions": [
 		"activeTab",

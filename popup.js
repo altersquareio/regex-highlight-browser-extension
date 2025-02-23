@@ -79,24 +79,65 @@ async function handleHighlightClick() {
 /**
  * Highlights text in the page based on the given regex and flags.
  * @param {string} regexStr The regex string.
- * @param {string} flags The regex flags.
+ * @param {string} flags The regex flags (e.g., "i" for case-insensitive, "g" for global).
  */
 function highlightText(regexStr, flags) {
+	// If no regex string is provided, exit the function.
 	if (!regexStr) return;
 
 	let regex;
 	try {
+		// Attempt to create a new RegExp object.
 		regex = new RegExp(regexStr, flags);
 	} catch (error) {
+		// If the regex is invalid, log an error to the console and display an alert.
 		console.error("Invalid regex:", error);
 		alert("Invalid regular expression. Please check your input.");
 		return;
 	}
 
+	// Ensure the necessary CSS styles are injected into the document head.
+	// This avoids repeatedly creating style elements on each call.
+
+	// Style for highlighted text.
+	let highlightedStyle = document.getElementById("regexFindHighlightStyle");
+	if (!highlightedStyle) {
+		let style0 = document.createElement("style");
+		style0.id = "regexFindHighlightStyle";
+		style0.innerHTML = `.regexfindhighlighted { background-color: yellow; padding: 2px 4px; border-radius: 3px; }`;
+		document.head.appendChild(style0);
+	}
+
+	// Animation style for the currently highlighted element (if needed).
+	let animationStyle = document.getElementById("regexCurrAnimation");
+	if (!animationStyle) {
+		let style1 = document.createElement("style");
+		style1.id = "regexCurrAnimation";
+		style1.innerHTML = `@keyframes regexfindhere { 30% { transform: scale(1.2); } 40%, 60% { transform: rotate(-3deg) scale(1.2); } 50% { transform: rotate(3deg) scale(1.2); } 70% { transform: rotate(0deg) scale(1.2); } 100% { transform: scale(1); } }`;
+		document.head.appendChild(style1);
+	}
+
+	// Style for the currently matched element.
+	let currHighlightedStyle = document.getElementById(
+		"regexFindCurrHighlightStyle"
+	);
+	if (!currHighlightedStyle) {
+		let style1 = document.createElement("style");
+		style1.id = "regexFindCurrHighlightStyle";
+		style1.innerHTML = `.regexfindcurrent { display: inline-block; background-color: #FF8080; font-size: x-large; padding: 2px 4px; border-radius: 3px; animation: regexfindhere 0.5s ease-in-out; }`;
+		document.head.appendChild(style1);
+	}
+
+	/**
+	 * Recursively traverses the DOM tree, highlighting text nodes that match the regex.
+	 * @param {Node} node The current DOM node to traverse.
+	 */
 	function traverseTextNodes(node) {
+		// Process text nodes.
 		if (node.nodeType === Node.TEXT_NODE && node.nodeValue.trim() !== "") {
 			const matches = [];
 			let match;
+			// Find all matches within the current text node.
 			while ((match = regex.exec(node.nodeValue))) {
 				matches.push({
 					index: match.index,
@@ -104,11 +145,13 @@ function highlightText(regexStr, flags) {
 				});
 			}
 
+			// If matches are found, split the text node and wrap the matches in <span> elements.
 			if (matches.length > 0) {
-				const fragment = document.createDocumentFragment();
+				const fragment = document.createDocumentFragment(); // Use a fragment for efficient DOM updates.
 				let lastIndex = 0;
 
 				matches.forEach((m) => {
+					// Add the text before the match to the fragment.
 					const beforeText = node.nodeValue.substring(
 						lastIndex,
 						m.index
@@ -119,27 +162,29 @@ function highlightText(regexStr, flags) {
 						);
 					}
 
+					// Create a span for the highlighted text.
 					const highlightedText = node.nodeValue.substring(
 						m.index,
 						m.index + m.length
 					);
 					const span = document.createElement("span");
-					span.style.backgroundColor = "yellow";
-					span.style.padding = "2px 4px";
-					span.style.borderRadius = "3px";
+					span.classList.add("regexfindhighlighted"); // Apply the highlight style.
 					span.textContent = highlightedText;
 					fragment.appendChild(span);
 
 					lastIndex = m.index + m.length;
 				});
 
+				// Add the text after the last match to the fragment.
 				const afterText = node.nodeValue.substring(lastIndex);
 				if (afterText) {
 					fragment.appendChild(document.createTextNode(afterText));
 				}
 
+				// Replace the original text node with the fragment containing the highlighted spans.
 				node.parentNode.replaceChild(fragment, node);
 			}
+			// Traverse child nodes of element nodes, excluding script and style tags.
 		} else if (
 			node.nodeType === Node.ELEMENT_NODE &&
 			node.nodeName !== "SCRIPT" &&
@@ -149,6 +194,7 @@ function highlightText(regexStr, flags) {
 		}
 	}
 
+	// Start traversing the DOM from the body element.
 	traverseTextNodes(document.body);
 }
 
@@ -173,9 +219,7 @@ async function handleClearHighlights() {
  * Clears all highlighted spans in the page.
  */
 function clearHighlights() {
-	const highlightedSpans = document.querySelectorAll(
-		'span[style*="background-color: yellow"]'
-	);
+	let highlightedSpans = document.querySelectorAll(".regexfindhighlighted");
 	for (let i = highlightedSpans.length - 1; i >= 0; i--) {
 		const span = highlightedSpans[i];
 		const textNode = document.createTextNode(span.textContent);
@@ -210,32 +254,50 @@ async function handleScroll(mode) {
 
 /**
  * Scrolls the page to the specified highlighted span.
- * @param {number} index The index of the highlighted span.
- * @param {string} mode The scroll mode ("next" or "prev").
+ * @param {number} index The index of the highlighted span to scroll to.
+ * @param {string} mode The scroll mode ("next" or "prev") to determine the next/previous element.
  * @returns {boolean} True if a highlighted span was found and scrolled to, false otherwise.
  */
-function scrollToHighlight(index, mode) {
-	let highlightedSpans = document.querySelectorAll(
-		'span[style*="background-color: yellow"]'
-	);
+async function scrollToHighlight(index, mode) {
+	// Adjust the index based on the scroll mode.
+	if (mode == "next") index++; // Increment for "next"
+	if (mode == "prev") index--; // Decrement for "prev"
 
-	if (mode == "next") index++;
-	if (mode == "prev") index--;
+	// Get all highlighted spans.
+	let highlightedSpans = document.querySelectorAll(".regexfindhighlighted");
 
-	if (index < 0 || index > highlightedSpans.length - 1) return false;
+	// Check if the calculated index is within the bounds of the highlighted spans array.
+	if (index < 0 || index > highlightedSpans.length - 1) {
+		// If the index is out of bounds, trigger a "bounce" animation on the current highlighted element (if any).
+		let currHighlighElem = document.querySelector(".regexfindcurrent");
+		if (currHighlighElem) {
+			// Remove the "current" class to trigger the animation (relies on CSS transitions/animations).
+			currHighlighElem.classList.remove("regexfindcurrent");
+			// Force a reflow to ensure the class removal takes effect before adding it back.
+			currHighlighElem.offsetHeight; // This is a common trick to force reflow. Reading any layout property would do.
+			currHighlighElem.classList.add("regexfindcurrent"); // Re-add the class to trigger the animation.
+		}
+		return false; // Return false to indicate that no valid span was found.
+	}
 
-	let rect = highlightedSpans[index].getBoundingClientRect();
-	let top =
-		rect.top + window.scrollY - window.innerHeight / 2 + rect.height / 2;
-	let left =
-		rect.left + window.scrollX - window.innerWidth / 2 + rect.width / 2;
+	// Remove the "current" class from the previously highlighted element (if any).
+	let currHighlighElem = document.querySelector(".regexfindcurrent");
+	if (currHighlighElem) currHighlighElem.classList.remove("regexfindcurrent");
 
-	window.scrollTo({
-		top: top,
-		left: left,
-		behavior: "smooth",
+	// Add the "current" class to the currently highlighted span.
+	highlightedSpans[index].classList.add("regexfindcurrent");
+
+	// Scrolls the highlighted span at the given index into view.
+	highlightedSpans[index].scrollIntoView({
+		// Use "auto" for the smoothest scrolling experience.  Other options include "smooth" (browser-dependent) and "instant".
+		behavior: "auto",
+		// Align the highlighted span to the vertical center of the viewport.
+		block: "center",
+		// Align the highlighted span to the horizontal center of the viewport.
+		inline: "center",
 	});
-	return true;
+
+	return true; // Return true to indicate that scrolling was successful.
 }
 
 /**
