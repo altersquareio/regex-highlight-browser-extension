@@ -5,6 +5,13 @@ document.addEventListener("DOMContentLoaded", handleDOMLoad);
  * Handles the DOMContentLoaded event.
  * Initializes event listeners for buttons and loads regex and flags from storage.
  */
+
+let isHighlighted = false;
+
+document.getElementById("regex").addEventListener("input", () => {
+    isHighlighted = false;
+});
+
 async function handleDOMLoad() {
 	document
 		.getElementById("highlight")
@@ -21,6 +28,20 @@ async function handleDOMLoad() {
 	document
 		.getElementById("nextMatch")
 		.addEventListener("click", handleScroll.bind(this, "next"));
+
+	document.getElementById("regex").addEventListener("keydown", async (event) => {
+		if (event.key === "Enter") {
+			event.preventDefault(); // Prevent form submission (if applicable)
+	
+			if (!isHighlighted) {
+				// If text hasn't been highlighted yet, highlight it first
+				await handleHighlightClick();
+			}
+	        isHighlighted=true
+			// Navigate to the next match
+			handleScroll("next");
+		}
+	});
 
 	let { regex } = await getFromStorage("regex");
 	let { flags } = await getFromStorage("flags");
@@ -84,7 +105,7 @@ async function handleHighlightClick() {
 		function: highlightText,
 		args: [regexStr, flags],
 	});
-
+    isHighlighted = true;
 	await handleScroll("next");
 }
 
@@ -249,25 +270,74 @@ function clearHighlights() {
  * Handles the scroll to next/previous match button click event.
  * @param {string} mode The scroll mode ("next" or "prev").
  */
+// async function handleScroll(mode) {
+// 	let tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+// 	if (!tabs || (tabs && tabs.length == 0)) {
+// 		console.error("No active tab found.");
+// 		return;
+// 	}
+// 	let { idx } = await getFromStorage("idx");
+// 	if (idx == undefined) {
+// 		await setStorage("idx", -1);
+// 		idx = -1;
+// 	}
+// 	let data = await chrome.scripting.executeScript({
+// 		target: { tabId: tabs[0].id },
+// 		function: scrollToHighlight,
+// 		args: [idx, mode],
+// 	});
+// 	if (data[0].result && mode == "next") idx++;
+// 	if (data[0].result && mode == "prev") idx--;
+// 	await setStorage("idx", idx);
+// }
+
+
+
 async function handleScroll(mode) {
-	let tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-	if (!tabs || (tabs && tabs.length == 0)) {
-		console.error("No active tab found.");
-		return;
-	}
-	let { idx } = await getFromStorage("idx");
-	if (idx == undefined) {
-		await setStorage("idx", -1);
-		idx = -1;
-	}
-	let data = await chrome.scripting.executeScript({
-		target: { tabId: tabs[0].id },
-		function: scrollToHighlight,
-		args: [idx, mode],
-	});
-	if (data[0].result && mode == "next") idx++;
-	if (data[0].result && mode == "prev") idx--;
-	await setStorage("idx", idx);
+    let tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs || (tabs && tabs.length == 0)) {
+        console.error("No active tab found.");
+        return;
+    }
+
+    // Get the current index from storage.
+    let { idx } = await getFromStorage("idx");
+    if (idx === undefined) {
+        await setStorage("idx", -1);
+        idx = -1;
+    }
+
+    // Execute the scrollToHighlight function in the active tab.
+    let data = await chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        function: scrollToHighlight,
+        args: [idx, mode],
+    });
+
+    // Update the index based on the result of scrollToHighlight.
+    if (data[0].result) {
+        if (mode === "next") {
+            idx++;
+        } else if (mode === "prev") {
+            idx--;
+        }
+
+        // Get the number of matches to handle wrapping.
+        let matchCount = await chrome.scripting.executeScript({
+            target: { tabId: tabs[0].id },
+            function: () => document.querySelectorAll(".regexfindhighlighted").length,
+        });
+
+        // Wrap around the index if it goes out of bounds.
+        if (idx < 0) {
+            idx = matchCount[0].result - 1; // Go to the last match.
+        } else if (idx >= matchCount[0].result) {
+            idx = 0; // Go to the first match.
+        }
+
+        // Save the updated index to storage.
+        await setStorage("idx", idx);
+    }
 }
 
 /**
@@ -276,46 +346,87 @@ async function handleScroll(mode) {
  * @param {string} mode The scroll mode ("next" or "prev") to determine the next/previous element.
  * @returns {boolean} True if a highlighted span was found and scrolled to, false otherwise.
  */
-async function scrollToHighlight(index, mode) {
-	// Adjust the index based on the scroll mode.
-	if (mode == "next") index++; // Increment for "next"
-	if (mode == "prev") index--; // Decrement for "prev"
+// async function scrollToHighlight(index, mode) {
+// 	// Adjust the index based on the scroll mode.
+// 	if (mode == "next") index++; // Increment for "next"
+// 	if (mode == "prev") index--; // Decrement for "prev"
 
-	// Get all highlighted spans.
-	let highlightedSpans = document.querySelectorAll(".regexfindhighlighted");
+// 	// Get all highlighted spans.
+// 	let highlightedSpans = document.querySelectorAll(".regexfindhighlighted");
 
-	// Check if the calculated index is within the bounds of the highlighted spans array.
-	if (index < 0 || index > highlightedSpans.length - 1) {
-		// If the index is out of bounds, trigger a "bounce" animation on the current highlighted element (if any).
-		let currHighlighElem = document.querySelector(".regexfindcurrent");
-		if (currHighlighElem) {
-			// Remove the "current" class to trigger the animation (relies on CSS transitions/animations).
-			currHighlighElem.classList.remove("regexfindcurrent");
-			// Force a reflow to ensure the class removal takes effect before adding it back.
-			currHighlighElem.offsetHeight; // This is a common trick to force reflow. Reading any layout property would do.
-			currHighlighElem.classList.add("regexfindcurrent"); // Re-add the class to trigger the animation.
-		}
-		return false; // Return false to indicate that no valid span was found.
-	}
+// 	// Check if the calculated index is within the bounds of the highlighted spans array.
+// 	if (index < 0 || index > highlightedSpans.length - 1) {
+// 		// If the index is out of bounds, trigger a "bounce" animation on the current highlighted element (if any).
+// 		let currHighlighElem = document.querySelector(".regexfindcurrent");
+// 		if (currHighlighElem) {
+// 			// Remove the "current" class to trigger the animation (relies on CSS transitions/animations).
+// 			currHighlighElem.classList.remove("regexfindcurrent");
+// 			// Force a reflow to ensure the class removal takes effect before adding it back.
+// 			currHighlighElem.offsetHeight; // This is a common trick to force reflow. Reading any layout property would do.
+// 			currHighlighElem.classList.add("regexfindcurrent"); // Re-add the class to trigger the animation.
+// 		}
+// 		return false; // Return false to indicate that no valid span was found.
+// 	}
 
-	// Remove the "current" class from the previously highlighted element (if any).
-	let currHighlighElem = document.querySelector(".regexfindcurrent");
-	if (currHighlighElem) currHighlighElem.classList.remove("regexfindcurrent");
+// 	// Remove the "current" class from the previously highlighted element (if any).
+// 	let currHighlighElem = document.querySelector(".regexfindcurrent");
+// 	if (currHighlighElem) currHighlighElem.classList.remove("regexfindcurrent");
 
-	// Add the "current" class to the currently highlighted span.
-	highlightedSpans[index].classList.add("regexfindcurrent");
+// 	// Add the "current" class to the currently highlighted span.
+// 	highlightedSpans[index].classList.add("regexfindcurrent");
 
-	// Scrolls the highlighted span at the given index into view.
-	highlightedSpans[index].scrollIntoView({
-		// Use "auto" for the smoothest scrolling experience.  Other options include "smooth" (browser-dependent) and "instant".
-		behavior: "auto",
-		// Align the highlighted span to the vertical center of the viewport.
-		block: "center",
-		// Align the highlighted span to the horizontal center of the viewport.
-		inline: "center",
-	});
+// 	// Scrolls the highlighted span at the given index into view.
+// 	highlightedSpans[index].scrollIntoView({
+// 		// Use "auto" for the smoothest scrolling experience.  Other options include "smooth" (browser-dependent) and "instant".
+// 		behavior: "auto",
+// 		// Align the highlighted span to the vertical center of the viewport.
+// 		block: "center",
+// 		// Align the highlighted span to the horizontal center of the viewport.
+// 		inline: "center",
+// 	});
 
-	return true; // Return true to indicate that scrolling was successful.
+// 	return true; // Return true to indicate that scrolling was successful.
+// }
+
+
+
+function scrollToHighlight(index, mode) {
+    // Adjust the index based on the scroll mode.
+    if (mode === "next") index++; // Increment for "next"
+    if (mode === "prev") index--; // Decrement for "prev"
+
+    // Get all highlighted spans.
+    let highlightedSpans = document.querySelectorAll(".regexfindhighlighted");
+
+    // If there are no matches, return false.
+    if (highlightedSpans.length === 0) {
+        return false;
+    }
+
+    // Wrap around the index if it goes out of bounds.
+    if (index < 0) {
+        index = highlightedSpans.length - 1; // Go to the last match.
+    } else if (index >= highlightedSpans.length) {
+        index = 0; // Go to the first match.
+    }
+
+    // Remove the "current" class from the previously highlighted element (if any).
+    let currHighlightElem = document.querySelector(".regexfindcurrent");
+    if (currHighlightElem) {
+        currHighlightElem.classList.remove("regexfindcurrent");
+    }
+
+    // Add the "current" class to the currently highlighted span.
+    highlightedSpans[index].classList.add("regexfindcurrent");
+
+    // Scroll the highlighted span into view.
+    highlightedSpans[index].scrollIntoView({
+        behavior: "auto",
+        block: "center",
+        inline: "center",
+    });
+
+    return true; // Return true to indicate that scrolling was successful.
 }
 
 /**
