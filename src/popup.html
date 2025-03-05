@@ -15,6 +15,9 @@
             --gray-300: #d1d5db;
             --gray-600: #4b5563;
             --gray-700: #374151;
+            --gray-800: #ccc;
+            --gray-900: #666;
+            --black: #000
         }
 
         body {
@@ -24,7 +27,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
             margin: 0;
             line-height: 1.4;
         }
@@ -223,6 +225,13 @@
         .navigation-buttons button:hover::after {
             border-color: var(--primary);
         }
+        .disabled {
+            background-color: var(--gray-800) !important; 
+            color: var(--black) !important;
+            cursor: not-allowed;
+            opacity: 0.6;
+            pointer-events: none; /* Prevents clicks */
+        }
     </style>
 </head>
 
@@ -244,13 +253,13 @@
         </div>
 
         <div class="button-group">
-            <button id="clear">Clear All</button>
-            <button id="highlight">Highlight Matches</button>
+            <button id="clear" class="disabled">Clear All</button>
+            <button id="highlight" class="disabled">Highlight Matches</button>
         </div>
 
         <div class="navigation-buttons">
-            <button id="prevMatch">Previous Match</button>
-            <button id="nextMatch">Next Match</button>
+            <button id="prevMatch" class="disabled">Previous Match</button>
+            <button id="nextMatch" class="disabled">Next Match</button>
         </div>
     </div>
     <script src="popup.js"></script>
