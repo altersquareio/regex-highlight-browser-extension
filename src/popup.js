@@ -13,12 +13,9 @@ const buttons = document.querySelectorAll(".disabled"); // Select buttons initia
 
 regexInput.addEventListener("input", () => {
 	isHighlighted = false;
-	// Enable buttons when input is not empty
-	if (regexInput.value.trim() !== "") {
-		buttons.forEach((button) => {
-			button.classList.remove("disabled");
-		});
-	}
+	const isEmpty = regexInput.value.trim() === "";
+	buttons.forEach((button) => button.classList.toggle("disabled", isEmpty));
+	if (isEmpty) handleClearHighlights();
 });
 
 regexInput.addEventListener("focusout", () => {
@@ -78,16 +75,10 @@ async function handleDOMLoad() {
 		flags = val;
 	}
 
-	if (regex !== undefined) {
-		document.getElementById("regex").value = regex;
-	}
-	if (flags !== undefined) {
-		document.getElementById("global").checked = flags.includes("g");
-		document.getElementById("caseInsensitive").checked =
-			flags.includes("i");
-		document.getElementById("multiline").checked = flags.includes("m");
-		document.getElementById("unicode").checked = flags.includes("u");
-	}
+	document.getElementById("global").checked = flags.includes("g");
+	document.getElementById("caseInsensitive").checked = flags.includes("i");
+	document.getElementById("multiline").checked = flags.includes("m");
+	document.getElementById("unicode").checked = flags.includes("u");
 }
 
 /**
