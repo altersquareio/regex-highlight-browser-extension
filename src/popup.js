@@ -12,24 +12,23 @@ const regexInput = document.getElementById("regex");
 const buttons = document.querySelectorAll(".disabled"); // Select buttons initially disabled
 
 regexInput.addEventListener("input", () => {
-    isHighlighted = false;
-    // Enable buttons when input is not empty
-    if (regexInput.value.trim() !== "") {
-        buttons.forEach(button => {
-            button.classList.remove("disabled");
-        });
-    }
+	isHighlighted = false;
+	// Enable buttons when input is not empty
+	if (regexInput.value.trim() !== "") {
+		buttons.forEach((button) => {
+			button.classList.remove("disabled");
+		});
+	}
 });
 
 regexInput.addEventListener("focusout", () => {
-    // Re-disable buttons when input is empty
-    if (regexInput.value.trim() === "") {
-        buttons.forEach(button => {
-            button.classList.add("disabled");
-        });
-    }
+	// Re-disable buttons when input is empty
+	if (regexInput.value.trim() === "") {
+		buttons.forEach((button) => {
+			button.classList.add("disabled");
+		});
+	}
 });
-
 
 async function handleDOMLoad() {
 	document
@@ -48,19 +47,21 @@ async function handleDOMLoad() {
 		.getElementById("nextMatch")
 		.addEventListener("click", handleScroll.bind(this, "next"));
 
-	document.getElementById("regex").addEventListener("keydown", async (event) => {
-		if (event.key === "Enter") {
-			event.preventDefault(); // Prevent form submission (if applicable)
-	
-			if (!isHighlighted) {
-				// If text hasn't been highlighted yet, highlight it first
-				await handleHighlightClick();
+	document
+		.getElementById("regex")
+		.addEventListener("keydown", async (event) => {
+			if (event.key === "Enter") {
+				event.preventDefault(); // Prevent form submission (if applicable)
+
+				if (!isHighlighted) {
+					// If text hasn't been highlighted yet, highlight it first
+					await handleHighlightClick();
+				}
+				isHighlighted = true;
+				// Navigate to the next match
+				handleScroll("next");
 			}
-	        isHighlighted=true
-			// Navigate to the next match
-			handleScroll("next");
-		}
-	});
+		});
 
 	let { regex } = await getFromStorage("regex");
 	let { flags } = await getFromStorage("flags");
@@ -123,7 +124,7 @@ async function handleHighlightClick() {
 		function: highlightText,
 		args: [regexStr, flags],
 	});
-    isHighlighted = true;
+	isHighlighted = true;
 	await handleScroll("next");
 }
 
@@ -194,26 +195,30 @@ function highlightText(regexStr, flags) {
 			// Reset regex.lastIndex before each execution to prevent repeated matches
 			regex.lastIndex = 0;
 			// Find all matches within the current text node.
-			if (regex.flags.includes("\g")) {
+			if (regex.flags.includes("g")) {
 				while ((match = regex.exec(node.nodeValue)) !== null) {
-					if (matches.length < MAX_ARRAY_LENGTH) { // if matches exceed limit then dont match and stop
-								matches.push({
-									index: match.index,
-									length: match[0].length,
-								});
-							
-								if (match.index === regex.lastIndex) {
-									regex.lastIndex++; 
-								}
-							} else {
-								break;
-							}
+					if (matches.length < MAX_ARRAY_LENGTH) {
+						// if matches exceed limit then dont match and stop
+						matches.push({
+							index: match.index,
+							length: match[0].length,
+						});
+
+						if (match.index === regex.lastIndex) {
+							regex.lastIndex++;
+						}
+					} else {
+						break;
+					}
 				}
 			} else {
 				match = node.nodeValue.match(regex); // Non-global case
 				if (match) {
 					let startIndex = node.nodeValue.indexOf(match[0]);
-					matches.push({ index: startIndex, length: match[0].length });
+					matches.push({
+						index: startIndex,
+						length: match[0].length,
+					});
 				}
 			}
 
@@ -305,53 +310,52 @@ function clearHighlights() {
  * @param {string} mode The scroll mode ("next" or "prev").
  */
 
-
-
 async function handleScroll(mode) {
-    let tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tabs || (tabs && tabs.length == 0)) {
-        console.error("No active tab found.");
-        return;
-    }
+	let tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+	if (!tabs || (tabs && tabs.length == 0)) {
+		console.error("No active tab found.");
+		return;
+	}
 
-    // Get the current index from storage.
-    let { idx } = await getFromStorage("idx");
-    if (idx === undefined) {
-        await setStorage("idx", -1);
-        idx = -1;
-    }
+	// Get the current index from storage.
+	let { idx } = await getFromStorage("idx");
+	if (idx === undefined) {
+		await setStorage("idx", -1);
+		idx = -1;
+	}
 
-    // Execute the scrollToHighlight function in the active tab.
-    let data = await chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
-        function: scrollToHighlight,
-        args: [idx, mode],
-    });
+	// Execute the scrollToHighlight function in the active tab.
+	let data = await chrome.scripting.executeScript({
+		target: { tabId: tabs[0].id },
+		function: scrollToHighlight,
+		args: [idx, mode],
+	});
 
-    // Update the index based on the result of scrollToHighlight.
-    if (data[0].result) {
-        if (mode === "next") {
-            idx++;
-        } else if (mode === "prev") {
-            idx--;
-        }
+	// Update the index based on the result of scrollToHighlight.
+	if (data[0].result) {
+		if (mode === "next") {
+			idx++;
+		} else if (mode === "prev") {
+			idx--;
+		}
 
-        // Get the number of matches to handle wrapping.
-        let matchCount = await chrome.scripting.executeScript({
-            target: { tabId: tabs[0].id },
-            function: () => document.querySelectorAll(".regexfindhighlighted").length,
-        });
+		// Get the number of matches to handle wrapping.
+		let matchCount = await chrome.scripting.executeScript({
+			target: { tabId: tabs[0].id },
+			function: () =>
+				document.querySelectorAll(".regexfindhighlighted").length,
+		});
 
-        // Wrap around the index if it goes out of bounds.
-        if (idx < 0) {
-            idx = matchCount[0].result - 1; // Go to the last match.
-        } else if (idx >= matchCount[0].result) {
-            idx = 0; // Go to the first match.
-        }
+		// Wrap around the index if it goes out of bounds.
+		if (idx < 0) {
+			idx = matchCount[0].result - 1; // Go to the last match.
+		} else if (idx >= matchCount[0].result) {
+			idx = 0; // Go to the first match.
+		}
 
-        // Save the updated index to storage.
-        await setStorage("idx", idx);
-    }
+		// Save the updated index to storage.
+		await setStorage("idx", idx);
+	}
 }
 
 /**
@@ -361,45 +365,43 @@ async function handleScroll(mode) {
  * @returns {boolean} True if a highlighted span was found and scrolled to, false otherwise.
  */
 
-
-
 function scrollToHighlight(index, mode) {
-    // Adjust the index based on the scroll mode.
-    if (mode === "next") index++; // Increment for "next"
-    if (mode === "prev") index--; // Decrement for "prev"
+	// Adjust the index based on the scroll mode.
+	if (mode === "next") index++; // Increment for "next"
+	if (mode === "prev") index--; // Decrement for "prev"
 
-    // Get all highlighted spans.
-    let highlightedSpans = document.querySelectorAll(".regexfindhighlighted");
+	// Get all highlighted spans.
+	let highlightedSpans = document.querySelectorAll(".regexfindhighlighted");
 
-    // If there are no matches, return false.
-    if (highlightedSpans.length === 0) {
-        return false;
-    }
+	// If there are no matches, return false.
+	if (highlightedSpans.length === 0) {
+		return false;
+	}
 
-    // Wrap around the index if it goes out of bounds.
-    if (index < 0) {
-        index = highlightedSpans.length - 1; // Go to the last match.
-    } else if (index >= highlightedSpans.length) {
-        index = 0; // Go to the first match.
-    }
+	// Wrap around the index if it goes out of bounds.
+	if (index < 0) {
+		index = highlightedSpans.length - 1; // Go to the last match.
+	} else if (index >= highlightedSpans.length) {
+		index = 0; // Go to the first match.
+	}
 
-    // Remove the "current" class from the previously highlighted element (if any).
-    let currHighlightElem = document.querySelector(".regexfindcurrent");
-    if (currHighlightElem) {
-        currHighlightElem.classList.remove("regexfindcurrent");
-    }
+	// Remove the "current" class from the previously highlighted element (if any).
+	let currHighlightElem = document.querySelector(".regexfindcurrent");
+	if (currHighlightElem) {
+		currHighlightElem.classList.remove("regexfindcurrent");
+	}
 
-    // Add the "current" class to the currently highlighted span.
-    highlightedSpans[index].classList.add("regexfindcurrent");
+	// Add the "current" class to the currently highlighted span.
+	highlightedSpans[index].classList.add("regexfindcurrent");
 
-    // Scroll the highlighted span into view.
-    highlightedSpans[index].scrollIntoView({
-        behavior: "auto",
-        block: "center",
-        inline: "center",
-    });
+	// Scroll the highlighted span into view.
+	highlightedSpans[index].scrollIntoView({
+		behavior: "auto",
+		block: "center",
+		inline: "center",
+	});
 
-    return true; // Return true to indicate that scrolling was successful.
+	return true; // Return true to indicate that scrolling was successful.
 }
 
 /**
