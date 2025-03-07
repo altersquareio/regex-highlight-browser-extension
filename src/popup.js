@@ -27,6 +27,15 @@ regexInput.addEventListener("focusout", () => {
 	}
 });
 
+document.addEventListener("keydown", (event) => {
+	if (event.key === "Enter") {
+		event.preventDefault();
+		handleScroll("next");
+	}
+});
+
+if (regexInput) handleHighlightClick();
+
 async function handleDOMLoad() {
 	document
 		.getElementById("highlight")
@@ -75,10 +84,21 @@ async function handleDOMLoad() {
 		flags = val;
 	}
 
-	document.getElementById("global").checked = flags.includes("g");
-	document.getElementById("caseInsensitive").checked = flags.includes("i");
-	document.getElementById("multiline").checked = flags.includes("m");
-	document.getElementById("unicode").checked = flags.includes("u");
+	if (regex !== undefined) {
+		document.getElementById("regex").value = regex;
+		if (regexInput.value.trim() !== "") {
+			buttons.forEach((button) => {
+				button.classList.remove("disabled");
+			});
+		}
+	}
+	if (flags !== undefined) {
+		document.getElementById("global").checked = flags.includes("g");
+		document.getElementById("caseInsensitive").checked =
+			flags.includes("i");
+		document.getElementById("multiline").checked = flags.includes("m");
+		document.getElementById("unicode").checked = flags.includes("u");
+	}
 }
 
 /**
