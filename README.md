@@ -1,58 +1,111 @@
-# Regex Highlighter Chrome Extension
+# Regex Highlighter
 
-This Chrome extension allows you to highlight text on any webpage using regular expressions. It provides a simple interface to input your regex, select flags, and easily navigate between highlighted matches.
+A Chrome extension that highlights text on any webpage using regular expressions, with navigation features to easily move between matches.
+
+
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
 ## Features
 
-- **Real-time Highlighting:** Dynamically highlights text on the current webpage as you type your regex.
-- **Regex Flags:** Supports common regex flags (global, case-insensitive, multiline, unicode) for flexible matching.
-- **Clear Highlights:** Easily remove all highlights with a single click.
-- **Navigation:** Navigate between highlighted matches using "Previous Match" and "Next Match" buttons.
-- **Persistent Settings:** Saves your regex and flags so they are retained between uses.
+- **Real-time Highlighting:** Highlight text on any webpage using regular expressions
+- **Regex Flags Support:** Use global, case-insensitive, multiline, and unicode flags
+- **Match Navigation:** Easily navigate between highlighted matches with "Previous" and "Next" buttons
+- **Keyboard Shortcuts:** Press Enter to quickly move to the next match
+- **Visual Indication:** Current match is highlighted with a distinct style and animation
+- **Persistent Settings:** Your regex patterns and flag settings are saved between uses
+- **Clean UI:** Modern, intuitive interface with toggles for regex flags
 
 ## Installation
 
-1. Clone this repository: `git clone https://github.com/rohandhamapurkar/regex-highlight-browser-extension.git`
-2. Open Chrome and go to `chrome://extensions/`.
-3. Enable "Developer mode" in the top right corner.
-4. Click "Load unpacked".
-5. Select the directory where you cloned the repository.
+### From Chrome Web Store
+*Coming soon*
+
+### Manual Installation (Developer Mode)
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/your-username/regex-text-highlighter.git
+   ```
+2. Open Chrome and navigate to `chrome://extensions/`
+3. Enable "Developer mode" in the top-right corner
+4. Click "Load unpacked" and select the cloned directory
 
 ## Usage
 
-1. Open a webpage where you want to highlight text.
-2. Click the Regex Highlighter extension icon in your browser toolbar.
-3. Enter your regular expression in the input field.
-4. Select the desired flags.
-5. Click the "Highlight" button.
-6. Use the "Previous Match" and "Next Match" buttons to navigate between highlighted instances.
-7. Click the "Clear Highlights" button to remove all highlights.
+1. Navigate to any webpage where you want to highlight text
+2. Click the Regex Highlighter extension icon in your browser toolbar
+3. Enter your regular expression in the text field
+4. Select the appropriate regex flags:
+   - **Global (g):** Find all matches (not just the first one)
+   - **Case Insensitive (i):** Match regardless of letter case
+   - **Multiline (m):** Make `^` and `$` match the start/end of each line
+   - **Unicode (u):** Enable proper Unicode matching
+5. Click "Highlight Matches" to highlight all matching text
+6. Use the "Previous Match" and "Next Match" buttons to navigate between matches
+7. Press Enter to quickly navigate to the next match
+8. Click "Clear All" to remove all highlights
 
-## Options
+## Examples
 
-- **Regex Input:** The text field where you enter your regular expression.
-- **Flags:** Checkboxes to enable various regex flags:
-    - **Global (g):** Finds all matches in the text, not just the first one.
-    - **Case Insensitive (i):** Matches regardless of case.
-    - **Multiline (m):** Makes `^` and `$` match the beginning/end of each line, not just the entire string.
-    - **Unicode (u):** Enables Unicode-aware matching.
-- **Highlight Button:** Triggers the highlighting process.
-- **Clear Highlights Button:** Removes all highlights from the page.
-- **Previous Match Button:** Scrolls to the previous highlighted match.
-- **Next Match Button:** Scrolls to the next highlighted match.
+Here are some useful regex patterns you can try:
+
+| Pattern | Description |
+|---------|-------------|
+| `\b\w+ing\b` | Find all words ending with "ing" |
+| `\b[A-Z][a-z]*\b` | Find words that start with a capital letter |
+| `\d{3}-\d{3}-\d{4}` | Find US phone numbers in XXX-XXX-XXXX format |
+| `\b\w+@\w+\.\w+\b` | Find simple email addresses |
+| `\$\d+(\.\d{2})?` | Find dollar amounts |
+
+## Technical Details
+
+- Built with vanilla JavaScript, HTML, and CSS
+- Uses Chrome's Storage API to save settings
+- Efficiently processes DOM nodes to highlight text while preserving page structure
+- Smart navigation between matches with wraparound functionality
+- Responsive design that works across various screen sizes
+
+## Privacy
+
+This extension:
+- Does NOT collect any user data
+- Does NOT send any information to external servers
+- Processes everything locally in your browser
+- Requires minimal permissions (only activeTab, storage, and scripting)
 
 ## Contributing
 
-Contributions are welcome! Feel free to submit pull requests or open issues.
+Contributions are welcome! To contribute:
 
-## License
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-This extension is licensed under the [MIT License](LICENSE).
+## Development
 
-## Credits
+### Project Structure
 
-This extension was developed by Rohan Dhamapurkar.
+```
+├── icons              # Extension icons in various sizes
+├── src                # Source code
+│   ├── popup.html     # Extension popup UI
+│   └── popup.js       # Popup functionality and text highlighting logic
+├── .gitignore         # Git ignore file
+├── .prettierrc.js     # Prettier configuration
+├── eslint.config.mjs  # ESLint configuration
+├── LICENSE            # MIT License
+├── manifest.json      # Chrome extension manifest
+├── package.json       # NPM package configuration
+└── README.md          # This file
+```
 
-## Contact
+### Getting Started
 
-If you have any questions or issues, please contact dhamapurkar54@gmail.com.
+```bash
+# Install dependencies
+npm install
+
+# Run lint checks and format code
+npm run lint
+```
