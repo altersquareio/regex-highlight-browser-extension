@@ -1,5 +1,5 @@
 {
-  "name": "regex-highlight-browser-extension",
+  "name": "regex-highlighter-extension",
   "version": "1.0.0",
   "main": "popup.js",
   "scripts": {

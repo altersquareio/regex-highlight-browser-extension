@@ -1,8 +1,8 @@
 {
 	"manifest_version": 3,
 	"name": "Regex Highlighter",
-	"version": "6.0",
-	"description": "Highlights text on a page using regular expressions.",
+	"version": "6.0.0",
+	"description": "Highlight text on any webpage using regular expressions. Easily navigate between matches.",
 	"permissions": [
 		"activeTab",
 		"storage",
